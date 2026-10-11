@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <link rel="icon" type="image/png" href="images/ag_favicon.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>AG Operator Console</title>
+  <link rel="stylesheet" href="tailwind.css">
+  <script src="https://unpkg.com/lucide@0.378.0"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #111827;
+      /* gray-900 */
+      color: #F3F4F6;
+      /* gray-100 */
+    }
+
+    .ticket-font {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .glass {
+      background: #1F2937;
+      /* gray-800 */
+      border: 1px solid #374151;
+      /* gray-700 */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Hide spin buttons on number inputs */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    thead th {
+      letter-spacing: 0.08em;
+    }
+
+    select option {
+      background: #1F2937;
+    }
+
+    .glass {
+      border-radius: 16px;
+    }
+
+    td {
+      vertical-align: top;
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    th {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    table {
+      table-layout: fixed;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-gray-900 text-gray-100">
+
+  <!-- Login Screen -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 z-50">
+    <div class="glass max-w-md w-full p-8 rounded-2xl relative">
+      <div class="flex justify-center mb-6 bg-white px-4 py-3 rounded-xl mx-auto w-max shadow-inner">
+        <img src="images/AGlogo.webp" alt="AG logo" style="height:48px;" />
+        <img src="images/AGlogotype.webp" alt="AG logotype"
+          style="height:48px; width:auto; object-fit:contain; margin-left:-12px; position:relative; top:5px;" />
+      </div>
+      <h2 class="text-2xl font-bold text-center text-white mb-6">Operator Login</h2>
+      <form id="loginForm" onsubmit="handleLogin(event); return false;">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-400 mb-1">Email</label>
+          <input type="email" id="username"
+            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            required placeholder="operator@example.com">
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-400 mb-1">Password</label>
+          <input type="password" id="password"
+            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            required placeholder="••••••••">
+        </div>
+        <p id="loginError" class="text-red-400 text-sm mb-4 text-center hidden">Invalid credentials</p>
+        <button type="submit"
+          class="w-full bg-[#F38E00] hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- App Wrapper -->
+  <div id="appContent" class="hidden flex-1 flex-col">
+    <!-- Header -->
+    <header class="bg-gray-800 text-white py-4 border-b border-gray-700 shadow-md sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div
+          class="flex items-center gap-3 bg-white px-3 sm:px-4 py-2 rounded-xl shadow-inner scale-90 sm:scale-100 origin-left sm:origin-center">
+          <img src="images/AGlogo.webp" alt="AG logo" style="height:48px; width:auto;" />
+          <img src="images/AGlogotype.webp" alt="AG logotype"
+            style="height:48px; width:auto; object-fit:contain; margin-left:-12px; position:relative; top:5px;" />
+        </div>
+        <div class="flex flex-wrap justify-center items-center gap-4 text-sm font-medium">
+          <span class="flex items-center gap-2 hidden sm:flex">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div> System Active
+          </span>
+          <button onclick="logout()" class="text-gray-400 hover:text-white transition-colors flex items-center gap-1"><i
+              data-lucide="log-out" class="w-4 h-4"></i> Logout</button>
+          <a href="index.html" class="hover:text-amber-400 transition-colors sm:ml-2">View Site</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+      <div class="flex flex-wrap justify-between items-end mb-8 gap-4">
+        <div class="w-auto">
+          <h2 class="text-3xl font-black mb-2 text-white">Repair Requests</h2>
+          <p class="text-gray-400 text-sm">Manage incoming booking tickets and update their status.</p>
+        </div>
+        <div class="flex flex-wrap gap-2 items-center ml-auto">
+          <div class="relative flex-grow md:flex-grow-0">
+            <input type="text" id="globalSearch" onkeyup="applyFilters()" placeholder="Search ID, Email, Phone..."
+              class="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg pl-4 pr-4 py-2 focus:outline-none focus:border-amber-500 w-48 shadow-inner transition-colors">
+          </div>
+          <div class="relative flex-grow md:flex-grow-0" id="exportMenuContainer">
+            <button onclick="document.getElementById('exportMenu').classList.toggle('hidden')"
+              class="w-full bg-blue-900/30 text-blue-400 border border-blue-800/50 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-900/50 transition-all active:scale-95 flex items-center justify-center gap-2">
+              <i data-lucide="download" class="w-4 h-4"></i> Export CSV
+            </button>
+            <div id="exportMenu"
+              class="hidden absolute top-full right-0 mt-2 bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-4 w-64 z-[60]">
+              <label class="block text-xs font-bold text-gray-400 mb-1">Date Range</label>
+              <select id="exportRange"
+                onchange="document.getElementById('customDateFields').style.display = this.value === 'custom' ? 'flex' : 'none'"
+                class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-white mb-3 focus:outline-none focus:border-amber-500 cursor-pointer">
+                <option value="today">Today</option>
+                <option value="1week">Last 1 Week</option>
+                <option value="15days">Last 15 Days</option>
+                <option value="1month">Last 1 Month</option>
+                <option value="all" selected>All Time</option>
+                <option value="custom">Set Manually</option>
+              </select>
+              <div id="customDateFields" style="display:none;" class="flex-col gap-2 mb-3">
+                <div>
+                  <label class="block text-xs text-gray-400 mb-1">Start Date</label>
+                  <input type="date" id="exportStart"
+                    class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-400 mb-1">End Date</label>
+                  <input type="date" id="exportEnd"
+                    class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+              </div>
+              <button onclick="exportCSV()"
+                class="w-full bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-2 rounded transition-colors text-sm shadow-sm active:scale-95">Download
+                CSV</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div id="statsGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Tickets Table -->
+      <div class="glass rounded-2xl overflow-hidden overflow-x-auto" style="-webkit-overflow-scrolling: touch;">
+        <table class="text-left border-collapse" style="width:976px;">
+          <colgroup>
+            <col style="width:140px">
+            <col style="width:160px">
+            <col style="width:220px">
+            <col style="width:160px">
+            <col style="width:96px">
+            <col style="width:200px">
+          </colgroup>
+          <thead>
+            <tr class="bg-gray-800 border-b border-gray-700 text-xs uppercase tracking-wider text-gray-400 font-bold">
+              <th class="py-4">Ticket ID</th>
+              <th class="py-4">Customer</th>
+              <th class="py-4">Device & Repair</th>
+              <th class="py-4">Date & Time</th>
+              <th class="py-4">Amount</th>
+              <th class="py-4 text-right">
+                <div class="flex items-center justify-between w-full">
+                  <span>Status / Action</span>
+                  <div
+                    class="relative flex items-center justify-center w-6 h-6 hover:bg-gray-700 rounded transition-colors">
+                    <i data-lucide="filter" class="w-3.5 h-3.5 text-gray-400"></i>
+                    <select id="filterStatus" onchange="applyFilters()"
+                      class="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-xs bg-gray-800">
+                      <option value="">All</option>
+                      <option value="New">New</option>
+                      <option value="Received">Received</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Handed Over">Handed Over</option>
+                    </select>
+                  </div>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="ticketsBody" class="divide-y divide-gray-700 text-sm">
+            <!-- Injected by JS -->
+          </tbody>
+        </table>
+        <div id="emptyState" class="hidden text-center py-16">
+          <i data-lucide="inbox" class="w-12 h-12 text-gray-500 mx-auto mb-4 block"></i>
+          <h3 class="text-lg font-bold text-gray-200 mb-1">No Tickets Found</h3>
+          <p class="text-gray-400">When customers submit repair requests, they will appear here.</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // Authentication is handled by Firebase Auth (see below)
+
+    // FIRESTORE
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8uR1ZT9g6ScRlU02lVyIl0C8jRwYRC_w",
+      authDomain: "agms-au.firebaseapp.com",
+      projectId: "agms-au",
+      storageBucket: "agms-au.firebasestorage.app",
+      messagingSenderId: "406757702887",
+      appId: "1:406757702887:web:975a3ac118fa2e2fa3b642",
+      measurementId: "G-0128XGCFE4"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    let allTickets = [];
+
+    function showApp(signedIn) {
+      document.getElementById('loginScreen').style.display = signedIn ? 'none' : 'flex';
+      document.getElementById('appContent').style.display = signedIn ? 'flex' : 'none';
+    }
+
+    function applyFilters() {
+      const statVal = document.getElementById('filterStatus').value.toLowerCase();
+      const searchEl = document.getElementById('globalSearch');
+      const searchVal = searchEl ? searchEl.value.toLowerCase().trim() : '';
+
+      const rows = document.querySelectorAll('#ticketsBody tr');
+      rows.forEach(row => {
+        const idText = row.cells[0]?.textContent.toLowerCase() || '';
+        const custText = row.cells[1]?.textContent.toLowerCase() || '';
+        const statBadge = (row.cells[5]?.querySelector('span')?.textContent || '').toLowerCase().trim();
+
+        const matchStat = statVal === '' || statVal === 'all' || statBadge === statVal;
+        const matchSearch = searchVal === '' || idText.includes(searchVal) || custText.includes(searchVal);
+
+        if (matchStat && matchSearch) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const err = document.getElementById('loginError');
+      const btn = e.target.querySelector('button[type="submit"]');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto"></i>';
+      btn.disabled = true;
+      try {
+        await auth.signInWithEmailAndPassword(
+          document.getElementById('username').value.trim(),
+          document.getElementById('password').value
+        );
+        err.classList.add('hidden');
+      } catch (ex) {
+        err.textContent = ex.message;
+        err.classList.remove('hidden');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    function logout() {
+      auth.signOut();
+      document.getElementById('password').value = '';
+    }
+
+    async function getTickets() {
+      const snapshot = await db.collection('tickets').get();
+      return snapshot.docs.map(doc => doc.data());
+    }
+
+    async function updateTicketAmount(id, value) {
+      const num = Number(value);
+      try {
+        await db.collection('tickets').doc(id).update({ amount: num });
+        const t = allTickets.find(x => x.id === id);
+        if (t) t.amount = num;
+      } catch (e) {
+        console.error("Error updating ticket amount:", e);
+        alert(`Failed to save amount for ticket ${id}: ${e.message || e}`);
+      }
+    }
+
+    async function updateTicketStatus(id, newStatus) {
+      const updates = { status: newStatus };
+      const existing = allTickets.find(t => t.id === id);
+
+      if (newStatus === 'Received') {
+        if (existing && !existing.receivedAt) {
+          updates.receivedAt = new Date().toISOString();
+        }
+      } else if (newStatus === 'Completed') {
+        if (existing && !existing.completedAt) {
+          updates.completedAt = new Date().toISOString();
+        }
+      } else if (newStatus === 'Handed Over') {
+        if (existing && !existing.handedOverAt) {
+          updates.handedOverAt = new Date().toISOString();
+        }
+      }
+
+      await db.collection('tickets').doc(id).update(updates);
+      // keep the customer-facing tracker in sync (older tickets may not have one)
+      try { await db.collection('ticketStatus').doc(id).update({ status: newStatus }); } catch (e) { }
+      // Update in memory — no need to refetch the whole collection
+      if (existing) Object.assign(existing, updates);
+      renderTickets();
+    }
+
+    async function deleteTicket(id) {
+      if (!confirm(`Are you sure you want to delete ticket ${id}?`)) return;
+      await db.collection('tickets').doc(id).delete();
+      try { await db.collection('ticketStatus').doc(id).delete(); } catch (e) { }
+      renderTickets();
+    }
+
+
+
+    function getStatusBadge(status) {
+      if (status === 'Completed') return `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">Completed</span>`;
+      if (status === 'Handed Over') return `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-300">Handed Over</span>`;
+      if (status === 'In Progress') return `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">In Progress</span>`;
+      if (status === 'Received') return `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200">Received</span>`;
+      return `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">New</span>`;
+    }
+
+    // Escape text submitted by the public so it can never run as code in this page
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function getElapsedStr(startStr, endStr) {
+      if (!startStr) return '0d 0h 0m';
+      const start = new Date(startStr);
+      const end = endStr ? new Date(endStr) : new Date();
+      const diffMins = Math.max(0, Math.floor((end - start) / 60000));
+
+      const days = Math.floor(diffMins / (24 * 60));
+      const hours = Math.floor((diffMins % (24 * 60)) / 60);
+      const mins = diffMins % 60;
+
+      return `${days}d ${hours}h ${mins}m`;
+    }
+
+    async function renderTickets() {
+      let tickets;
+      try {
+        tickets = await getTickets();
+        allTickets = tickets;
+      } catch (e) {
+        console.error(e);
+        alert('Could not load tickets. Please sign in again.');
+        return;
+      }
+      const body = document.getElementById('ticketsBody');
+      const empty = document.getElementById('emptyState');
+      const table = document.querySelector('table');
+
+      // Update Stats
+      const stats = {
+        total: tickets.length,
+        pending: tickets.filter(t => t.status === 'New').length,
+        received: tickets.filter(t => t.status === 'Received').length,
+        progress: tickets.filter(t => t.status === 'In Progress').length,
+        completed: tickets.filter(t => t.status === 'Completed').length,
+        handed: tickets.filter(t => t.status === 'Handed Over').length
+      };
+
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="glass p-2 rounded-xl border-l-4 border-gray-500">
+          <div class="text-xs text-gray-400 font-bold mb-1">Total</div>
+          <div class="text-lg font-black text-white">${stats.total}</div>
+        </div>
+        <div class="glass p-2 rounded-xl border-l-4 border-amber-500">
+          <div class="text-xs text-gray-400 font-bold mb-1">New</div>
+          <div class="text-lg font-black text-white">${stats.pending}</div>
+        </div>
+        <div class="glass p-2 rounded-xl border-l-4 border-purple-500">
+          <div class="text-xs text-gray-400 font-bold mb-1">Received</div>
+          <div class="text-lg font-black text-white">${stats.received}</div>
+        </div>
+        <div class="glass p-2 rounded-xl border-l-4 border-blue-500">
+          <div class="text-xs text-gray-400 font-bold mb-1">In Progress</div>
+          <div class="text-lg font-black text-white">${stats.progress}</div>
+        </div>
+        <div class="glass p-2 rounded-xl border-l-4 border-emerald-500">
+          <div class="text-xs text-gray-400 font-bold mb-1">Completed</div>
+          <div class="text-lg font-black text-white">${stats.completed}</div>
+        </div>
+        <div class="glass p-2 rounded-xl border-l-4 border-gray-300">
+          <div class="text-xs text-gray-400 font-bold mb-1">Handed Over</div>
+          <div class="text-lg font-black text-white">${stats.handed}</div>
+        </div>
+      `;
+
+      if (tickets.length === 0) {
+        body.innerHTML = '';
+        table.style.display = 'none';
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+        table.style.display = 'table';
+        // Sort newest first
+        tickets.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+        body.innerHTML = tickets.map(t => {
+          const deviceName = t.brand && t.model ? `${t.brand} ${t.model}` : (t.device || 'Unknown Device');
+          const faultsStr = t.faults && t.faults.length ? t.faults.join(', ') : (t.repair || 'N/A');
+
+          return `
+          <tr class="hover:bg-gray-800 transition-colors">
+            <td class="py-4 whitespace-nowrap font-bold text-white ticket-font align-top">${esc(t.id)}</td>
+            <td class="py-4 align-top">
+              <div class="font-medium text-gray-200">${esc(t.name)}</div>
+              <div class="text-gray-400 text-xs mt-1"><i data-lucide="phone" class="w-3 h-3 inline"></i> ${esc(t.phone)}</div>
+              ${t.wa ? `<div class="text-emerald-500 text-xs mt-1"><i data-lucide="message-circle" class="w-3 h-3 inline"></i> ${esc(t.wa)}</div>` : ''}
+              ${t.email ? `<div class="text-blue-400 text-xs mt-1"><i data-lucide="mail" class="w-3 h-3 inline"></i> ${esc(t.email)}</div>` : ''}
+            </td>
+            <td class="py-4 align-top">
+              <div class="font-bold text-white">${esc(deviceName)}</div>
+              <div class="text-gray-300 text-sm mt-1 font-medium">${esc(faultsStr)}</div>
+              ${t.faultNotes ? `<div class="text-gray-400 text-xs mt-1 italic border-l-2 border-gray-600 pl-2">"${esc(t.faultNotes)}"</div>` : ''}
+              ${t.channel ? `<div class="text-amber-500 text-xs mt-2 uppercase font-bold tracking-wider">${esc(t.channel)}</div>` : ''}
+            </td>
+            <td class="py-4 whitespace-nowrap text-gray-400 align-top">
+              <div class="mb-2">
+                ${esc(t.date)} <br/><span class="text-xs opacity-75">${esc(t.time)}</span>
+              </div>
+              ${t.receivedAt ? `
+                <div class="mt-3 pt-3" style="border-top:1px solid rgba(55,65,81,0.5);">
+                  <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Received At</div>
+                  <div class="text-xs text-purple-400 font-medium">
+                     ${new Date(t.receivedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${new Date(t.receivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                  ${t.status === 'Completed' ? (() => {
+                if (!t.completedAt) return '';
+                return `
+                      <div class="text-[11px] font-mono text-emerald-500 mt-1.5 flex items-center gap-1.5 bg-emerald-500/10 w-max px-2 py-0.5 rounded border border-emerald-500/20">
+                        <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+                        <span>${getElapsedStr(t.receivedAt, t.completedAt)}</span>
+                      </div>
+                     `;
+              })() : t.status === 'Handed Over' ? (() => {
+                if (!t.handedOverAt) return '';
+                return `
+                      <div class="mt-2 pt-2" style="border-top:1px solid rgba(55,65,81,0.5);">
+                        <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Handed Over</div>
+                        <div class="text-xs text-blue-400 font-medium">
+                           ${new Date(t.handedOverAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${new Date(t.handedOverAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                     `;
+              })() : `
+                    <div class="text-[11px] font-mono text-amber-500 mt-1.5 flex items-center gap-1.5 bg-amber-500/10 w-max px-2 py-0.5 rounded border border-amber-500/20">
+                      <i data-lucide="clock" class="w-3 h-3"></i>
+                      <span class="live-timer" data-time="${t.receivedAt}">${getElapsedStr(t.receivedAt)}</span>
+                    </div>
+                  `}
+                </div>
+              ` : ''}
+            </td>
+            <td class="py-4 whitespace-nowrap align-top">
+              <div class="relative">
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                <input type="number" onchange="updateTicketAmount('${esc(t.id)}', this.value)"
+                  value="${t.amount || ''}" placeholder="0.00" step="0.01" min="0"
+                  class="bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-amber-500 focus:border-amber-500 py-1 text-right disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style="width:72px;padding-left:14px;padding-right:4px;"
+                  ${t.status === 'Handed Over' ? 'disabled' : ''}>
+              </div>
+            </td>
+            <td class="py-4 whitespace-nowrap align-top">
+              <div class="flex flex-col gap-2">
+                ${getStatusBadge(t.status || 'New')}
+                <select onchange="updateTicketStatus('${esc(t.id)}', this.value)"
+                  class="bg-gray-700 border border-gray-600 text-white text-xs rounded-lg focus:ring-amber-500 focus:border-amber-500 px-2 py-1 w-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  ${t.status === 'Handed Over' ? 'disabled' : ''}>
+                  <option value="New" ${(t.status || 'New') === 'New' ? 'selected' : ''}>New</option>
+                  <option value="Received" ${t.status === 'Received' ? 'selected' : ''}>Received</option>
+                  <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                  <option value="Completed" ${t.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                  <option value="Handed Over" ${t.status === 'Handed Over' ? 'selected' : ''}>Handed Over</option>
+                </select>
+                <div class="flex justify-end gap-1 mt-1">
+                  <button onclick="printTicket('${esc(t.id)}')" class="text-blue-400 hover:text-blue-300 p-1.5 rounded hover:bg-blue-400/10 transition-colors" title="Print Ticket">
+                    <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                  </button>
+                  <button onclick="deleteTicket('${esc(t.id)}')" class="text-red-500 hover:text-red-400 p-1.5 rounded hover:bg-red-500/10 transition-colors" title="Delete">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+        }).join('');
+      }
+      lucide.createIcons();
+      applyFilters();
+    }
+
+
+    function exportCSV() {
+      const range = document.getElementById('exportRange').value;
+      const now = new Date();
+      let startBound = null;
+      let endBound = null;
+
+      if (range === 'today') {
+        startBound = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (range === '1week') {
+        startBound = new Date();
+        startBound.setDate(startBound.getDate() - 7);
+      } else if (range === '15days') {
+        startBound = new Date();
+        startBound.setDate(startBound.getDate() - 15);
+      } else if (range === '1month') {
+        startBound = new Date();
+        startBound.setMonth(startBound.getMonth() - 1);
+      } else if (range === 'custom') {
+        const sVal = document.getElementById('exportStart').value;
+        const eVal = document.getElementById('exportEnd').value;
+        if (!sVal || !eVal) return alert("Please select both start and end dates.");
+        startBound = new Date(sVal);
+        endBound = new Date(eVal);
+        endBound.setHours(23, 59, 59, 999); // Include the entire end day
+      }
+
+      const filtered = allTickets.filter(t => {
+        if (!startBound) return true; // 'all'
+        if (!t.createdAt) return false;
+        const ticketDate = new Date(t.createdAt);
+        if (endBound) {
+          return ticketDate >= startBound && ticketDate <= endBound;
+        }
+        return ticketDate >= startBound;
+      });
+
+      if (filtered.length === 0) {
+        return alert("No tickets found in the selected date range.");
+      }
+
+      // Hide the menu
+      document.getElementById('exportMenu').classList.add('hidden');
+
+      const headers = ['Ticket ID', 'Customer Name', 'Phone', 'WhatsApp', 'Email', 'Brand', 'Model', 'Device/Item', 'Faults', 'Fault Notes', 'Service Type', 'Appointment Date', 'Appointment Time', 'Amount (AUD)', 'Status', 'Created At'];
+
+      const rows = filtered.map(t => {
+        return [
+          t.id,
+          t.name,
+          t.phone,
+          t.wa,
+          t.email,
+          t.brand,
+          t.model,
+          t.device,
+          (t.faults || []).join('; ') || t.repair,
+          t.faultNotes,
+          t.channel,
+          t.date,
+          t.time,
+          t.amount || 0,
+          t.status || 'New',
+          t.createdAt
+        ].map(val => {
+          if (val == null) return '""';
+          let str = String(val);
+          // A cell starting with = + - @ (or tab / carriage return) can be run
+          // as a formula by Excel or Google Sheets. Prefix it so it stays text.
+          if (/^[=+\-@\t\r]/.test(str)) str = "'" + str;
+          str = str.replace(/"/g, '""');
+          return `"${str}"`;
+        }).join(',');
+      });
+
+      // \uFEFF tells Excel the file is UTF-8, so accented names display correctly
+      const csvContent = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `tickets_export_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function printTicket(id) {
+      const ticket = allTickets.find(t => t.id === id);
+      if (!ticket) return alert("Ticket not found.");
+
+      let printFrame = document.getElementById('printFrame');
+      if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'printFrame';
+        printFrame.style.position = 'absolute';
+        printFrame.style.width = '0px';
+        printFrame.style.height = '0px';
+        printFrame.style.border = 'none';
+        document.body.appendChild(printFrame);
+      }
+      const deviceName = ticket.brand && ticket.model ? `${ticket.brand} ${ticket.model}` : (ticket.device || 'Unknown Device');
+      const faultsStr = ticket.faults && ticket.faults.length ? ticket.faults.join(', ') : (ticket.repair || 'N/A');
+
+      const content = `
+        <html>
+        <head>
+          <title>Repair Ticket - ${esc(ticket.id)}</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #111827; }
+            .header { text-align: center; border-bottom: 2px solid #E5E7EB; padding-bottom: 20px; margin-bottom: 30px; }
+            .logo { height: 60px; margin-bottom: 10px; }
+            h1 { margin: 0; font-size: 24px; color: #111827; }
+            .ticket-id { font-size: 18px; color: #6B7280; font-family: monospace; font-weight: bold; margin-top: 10px; }
+            .grid { display: flex; flex-wrap: wrap; gap: 40px; }
+            .col { flex: 1; min-width: 250px; }
+            .box { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+            .label { font-size: 12px; color: #6B7280; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; }
+            .val { font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+            .val:last-child { margin-bottom: 0; }
+            .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #9CA3AF; border-top: 1px solid #E5E7EB; padding-top: 20px; }
+            @media print {
+              body { padding: 0; }
+              .box { border-color: #000; background: transparent; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <!-- You can point this to absolute URL if needed, but relative works if same origin -->
+            <img src="images/AGlogo.webp" class="logo" alt="AG Mobile Service" onerror="this.style.display='none'" />
+            <img src="images/AGlogotype.webp" class="logo" alt="AG Mobile Service" style="margin-left: 10px;" onerror="this.style.display='none'" />
+            <div class="ticket-id">${esc(ticket.id)}</div>
+          </div>
+          
+          <div class="grid">
+            <div class="col">
+              <div class="box">
+                <div class="label">Customer Details</div>
+                <div class="val">${esc(ticket.name || 'N/A')}</div>
+                
+                <div class="label">Phone</div>
+                <div class="val">${esc(ticket.phone || 'N/A')}</div>
+                
+                ${ticket.wa ? `<div class="label">WhatsApp</div><div class="val">${esc(ticket.wa)}</div>` : ''}
+                ${ticket.email ? `<div class="label">Email</div><div class="val">${esc(ticket.email)}</div>` : ''}
+              </div>
+            </div>
+            
+            <div class="col">
+              <div class="box">
+                <div class="label">Device</div>
+                <div class="val">${esc(deviceName)}</div>
+                
+                <div class="label">Reported Faults</div>
+                <div class="val">${esc(faultsStr)}</div>
+                
+                ${ticket.faultNotes ? `<div class="label">Notes</div><div class="val">${esc(ticket.faultNotes)}</div>` : ''}
+                
+                <div class="label">Channel / Service Type</div>
+                <div class="val">${esc(ticket.channel || 'Standard')}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="box" style="margin-top: 10px;">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px;">
+              <div>
+                <div class="label">Appointment Date</div>
+                <div class="val" style="margin-bottom:0; font-size:14px;">${esc(ticket.date || 'N/A')}</div>
+              </div>
+              <div>
+                <div class="label">Appointment Time</div>
+                <div class="val" style="margin-bottom:0; font-size:14px;">${esc(ticket.time || 'N/A')}</div>
+              </div>
+              <div>
+                <div class="label">Current Status</div>
+                <div class="val" style="margin-bottom:0; font-size:14px;">${esc(ticket.status || 'New')}</div>
+              </div>
+              ${ticket.amount ? `
+              <div>
+                <div class="label">Amount (AUD)</div>
+                <div class="val" style="margin-bottom:0; font-size:14px;">${esc(ticket.amount)}</div>
+              </div>` : ''}
+            </div>
+            
+            ${ticket.receivedAt ? `
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; margin-top:20px; padding-top:20px; border-top:1px dashed #E5E7EB;">
+              <div>
+                <div class="label">Received At</div>
+                <div class="val" style="margin-bottom:0; font-size:14px;">${new Date(ticket.receivedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${new Date(ticket.receivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+              </div>
+              ${ticket.handedOverAt ? `
+              <div>
+                <div class="label">Handed Over At</div>
+                <div class="val" style="margin-bottom:0; font-size:14px;">${new Date(ticket.handedOverAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${new Date(ticket.handedOverAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+              </div>
+              <div>
+                <div class="label">Total Turnaround</div>
+                <div class="val" style="margin-bottom:0; font-size:14px;">${getElapsedStr(ticket.receivedAt, ticket.handedOverAt)}</div>
+              </div>
+              ` : ticket.completedAt ? `
+              <div>
+                <div class="label">Completed At</div>
+                <div class="val" style="margin-bottom:0; font-size:14px;">${new Date(ticket.completedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${new Date(ticket.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+              </div>
+              <div>
+                <div class="label">Time to Complete</div>
+                <div class="val" style="margin-bottom:0; font-size:14px;">${getElapsedStr(ticket.receivedAt, ticket.completedAt)}</div>
+              </div>
+              ` : `
+              <div>
+                <div class="label">Current Elapsed Time</div>
+                <div class="val" style="margin-bottom:0; font-size:14px;">${getElapsedStr(ticket.receivedAt)}</div>
+              </div>
+              `}
+            </div>
+            ` : ''}
+          </div>
+          
+          <div class="footer">
+            Generated on ${new Date().toLocaleString()} • AG Mobile Service
+          </div>
+          
+        </body>
+        </html>
+      `;
+
+      const doc = printFrame.contentWindow.document;
+      doc.open();
+      doc.write(content);
+      doc.close();
+
+      // Some browsers need a slight delay before triggering print from parent
+      setTimeout(() => {
+        printFrame.contentWindow.focus();
+        printFrame.contentWindow.print();
+      }, 250);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      auth.onAuthStateChanged(user => {
+        showApp(!!user);
+        if (user) renderTickets();
+      });
+
+      function updateLiveTimers() {
+        document.querySelectorAll('.live-timer').forEach(el => {
+          const start = el.getAttribute('data-time');
+          if (start) {
+            el.textContent = getElapsedStr(start);
+          }
+        });
+      }
+
+      // Live Timer Updater
+      setInterval(updateLiveTimers, 60000);
+
+      // Close export menu if clicked outside
+      document.addEventListener('click', (e) => {
+        const container = document.getElementById('exportMenuContainer');
+        const menu = document.getElementById('exportMenu');
+        if (container && menu && !container.contains(e.target)) {
+          menu.classList.add('hidden');
+        }
+      });
+    });
+  </script>
+
+  <!-- Custom Confirm Modal -->
+
+
+  <script>
+
+  </script>
+</body>
+
+</html>

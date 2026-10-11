@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <link href="tailwind.css" rel="stylesheet" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AG Mobile Service | Garage Tech Lab - Expert Smartphone Repairs</title>
+  <meta name="description"
+    content="AG Mobile Service - Independent master technician garage specializing in component-level smartphone surgery, motherboard repair, screen replacement, and micro-soldering for all brands." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <script defer src="https://unpkg.com/lucide@0.378.0/dist/umd/lucide.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script defer type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+
+
+
+
+    body {
+      background: #F9FAFB;
+      color: #111827;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      /* overflow-x: hidden on body breaks iOS pull-to-refresh. Handled by wrapper. */
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #FFFFFF;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #E5E7EB;
+      border-radius: 3px;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid #E5E7EB;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    .glass-light {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(229, 231, 235, 0.8);
+    }
+
+    .amber-glow {
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.3), 0 0 40px rgba(245, 158, 11, 0.1);
+    }
+
+    .grad-amber {
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+    }
+
+    .grad-cyan {
+      background: linear-gradient(135deg, #06B6D4, #0891B2);
+    }
+
+    .hero-bg {
+      background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.6) 60%, rgba(255, 255, 255, 1) 100%), url('images/Mobileshop.jpg');
+      background-size: cover;
+      background-position: center;
+      /* iOS Safari bug fix: background-attachment: fixed causes invisible/stretched images */
+    }
+
+    @media (min-width: 1024px) {
+      .hero-bg {
+        background-attachment: fixed;
+      }
+    }
+
+    .ticket-font {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .brand-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .brand-card:hover {
+      transform: translateY(-4px) scale(1.02);
+    }
+
+    .brand-card.selected {
+      border-color: rgba(245, 158, 11, 0.8) !important;
+      background: rgba(245, 158, 11, 0.08) !important;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+    }
+
+    .fault-card {
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+
+    .fault-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .fault-card.selected {
+      border-color: rgba(6, 182, 212, 0.8) !important;
+      background: rgba(6, 182, 212, 0.1) !important;
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+    }
+
+    .btn-amber {
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: #111827;
+      font-weight: 700;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .btn-amber:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-cyan {
+      background: linear-gradient(135deg, #06B6D4, #0891B2);
+      color: #111827;
+      font-weight: 700;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .btn-cyan:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+    }
+
+    .btn-ghost {
+      border: 1px solid rgba(209, 213, 219, 1);
+      background: transparent;
+      color: #4B5563;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(245, 158, 11, 0.5);
+      color: #F59E0B;
+      background: rgba(245, 158, 11, 0.05);
+    }
+
+    .status-dot-active {
+      width: 8px;
+      height: 8px;
+      background: #10B981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+      display: inline-block;
+    }
+
+    .metric-card {
+      background: linear-gradient(145deg, #F3F4F6, #FFFFFF);
+      border: 1px solid #E5E7EB;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      transition: all 0.3s ease;
+    }
+
+    .metric-card:hover {
+      border-color: rgba(245, 158, 11, 0.4);
+      transform: translateY(-2px);
+    }
+
+    input,
+    select,
+    textarea {
+      background: #FFFFFF !important;
+      border: 1px solid #E5E7EB !important;
+      color: #111827 !important;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none !important;
+      border-color: rgba(245, 158, 11, 0.6) !important;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08) !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #6B7280 !important;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: linear-gradient(90deg, #F59E0B, #06B6D4);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    .nav-blur {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(229, 231, 235, 1);
+    }
+
+    .section-title {
+      background: linear-gradient(135deg, #111827, #4B5563);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .accent-title {
+      background: linear-gradient(135deg, #F59E0B, #06B6D4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .table-row {
+      transition: background 0.2s ease;
+    }
+
+    .table-row:hover {
+      background: rgba(55, 65, 81, 0.3) !important;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-box {
+      animation: slideUp 0.3s ease;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    @keyframes slideUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    option {
+      background: #F3F4F6 !important;
+    }
+
+    .stage-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      transition: all 0.4s ease;
+    }
+
+    .stage-done {
+      background: linear-gradient(135deg, #10B981, #059669);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+      color: white;
+    }
+
+    .stage-active {
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+      color: #111827;
+    }
+
+    .stage-pending {
+      background: #E5E7EB;
+      color: #6B7280;
+    }
+
+    .specialty-img {
+      filter: brightness(0.7) saturate(1.2);
+      transition: all 0.4s ease;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .specialty-card {
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .specialty-card:hover .specialty-img {
+      filter: brightness(0.9) saturate(1.4);
+      transform: scale(1.05);
+    }
+
+    .trust-badge {
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      padding: 10px 18px;
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .qa-card {
+      border-left: 3px solid #F59E0B;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent);
+    }
+
+    .print-receipt {
+      display: none;
+    }
+
+    @media print {
+      body>*:not(#printArea) {
+        display: none !important;
+      }
+
+      #printArea {
+        display: block !important;
+      }
+    }
+
+    html {
+      scrollbar-gutter: stable;
+    }
+
+    body {
+      margin: 0;
+      overflow-x: clip;
+    }
+
+    html.is-changing,
+    html.is-animating {
+      scroll-behavior: auto !important;
+    }
+  </style>
+
+  <style>
+    .transition-fade {
+      transition: opacity 0.25s ease-out;
+      opacity: 1;
+    }
+
+    html.is-animating .transition-fade {
+      opacity: 0;
+    }
+  </style>
+  <link rel="canonical" href="https://agmobiles.vercel.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="AG Mobile Service" />
+  <meta property="og:title" content="AG Mobile Service | Expert Smartphone Repairs" />
+  <meta property="og:description" content="AG Mobile Service - Independent master technician garage specialising in screen replacement, battery, motherboard and micro-soldering repairs for all brands." />
+  <meta property="og:url" content="https://agmobiles.vercel.app/" />
+  <meta property="og:image" content="https://agmobiles.vercel.app/images/repair-station.webp" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "AG Mobile Service",
+    "description": "Independent smartphone repair specialist. Screen replacement, battery, motherboard and micro-soldering repairs for all brands.",
+    "url": "https://agmobiles.vercel.app/",
+    "image": "https://agmobiles.vercel.app/images/repair-station.webp",
+    "telephone": "+61450816230",
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Wednesday", "Friday"],
+        "opens": "09:00",
+        "closes": "21:00"
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Thursday", "Saturday", "Sunday"],
+        "opens": "17:30",
+        "closes": "21:30"
+      }
+    ],
+    "priceRange": "$$"
+  }
+  </script>
+</head>
+
+<body>
+
+  <!-- NAVIGATION -->
+  <nav id="navbar" class="nav-blur fixed top-0 left-0 right-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="index.html#hero" class="flex items-center gap-1" aria-label="AG Home">
+          <img src="images/AGlogo.webp" alt="AG logo" style="height:56px;width:auto;object-fit:contain;" />
+          <img src="images/AGlogotype.webp" alt="AG"
+            style="height:56px;width:auto;object-fit:contain;margin-left:-4px;position:relative;top:6px;" />
+        </a>
+        <div class="hidden md:flex items-center gap-1">
+          <a href="index.html#hero"
+            class="px-3 py-2 text-sm text-gray-700 hover:text-amber-400 transition-colors font-medium rounded-lg hover:bg-white/5">Home</a>
+          <a href="index.html#about"
+            class="px-3 py-2 text-sm text-gray-700 hover:text-amber-400 transition-colors font-medium rounded-lg hover:bg-white/5">About
+            Us</a>
+          <a href="index.html#services"
+            class="px-3 py-2 text-sm text-gray-700 hover:text-amber-400 transition-colors font-medium rounded-lg hover:bg-white/5">Services</a>
+          <a href="index.html#specialties"
+            class="px-3 py-2 text-sm text-gray-700 hover:text-amber-400 transition-colors font-medium rounded-lg hover:bg-white/5">Specialities</a>
+          <a href="estimate.html"
+            class="px-3 py-2 text-sm text-gray-700 hover:text-amber-400 transition-colors font-medium rounded-lg hover:bg-white/5">Estimator</a>
+          <a href="book.html"
+            class="px-3 py-2 text-sm text-gray-700 hover:text-amber-400 transition-colors font-medium rounded-lg hover:bg-white/5">Book
+            a Repair</a>
+          <a href="track.html"
+            class="px-3 py-2 text-sm text-gray-700 hover:text-amber-400 transition-colors font-medium rounded-lg hover:bg-white/5">Track
+            Repair</a>
+          <a href="index.html#contact"
+            class="px-3 py-2 text-sm text-gray-700 hover:text-amber-400 transition-colors font-medium rounded-lg hover:bg-white/5">Contact</a>
+        </div>
+        <div class="flex items-center gap-2 sm:gap-3">
+          <a href="https://wa.me/61450816230?text=Hi%20AG%20Mobile%20Service%2C%20I%20need%20a%20repair%20quote" target="_blank"
+            class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold mr-3 sm:mr-0 hover:opacity-90 transition-opacity shadow-sm"
+            style="background:#F38E00;color:#fff;">
+            <i data-lucide="phone" class="w-4 h-4"></i>
+            <span>Call Us</span>
+          </a>
+          <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-700 hover:text-amber-500" aria-label="Toggle menu">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Menu Dropdown -->
+    <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-200">
+      <div class="px-4 pt-2 pb-4 space-y-1 shadow-lg">
+        <a href="index.html#hero"
+          class="mobile-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-amber-500 hover:bg-gray-50">Home</a>
+        <a href="index.html#about"
+          class="mobile-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-amber-500 hover:bg-gray-50">About
+          Us</a>
+        <a href="index.html#services"
+          class="mobile-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-amber-500 hover:bg-gray-50">Services</a>
+        <a href="index.html#specialties"
+          class="mobile-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-amber-500 hover:bg-gray-50">Specialities</a>
+        <a href="estimate.html"
+          class="mobile-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-amber-500 hover:bg-gray-50">Estimator</a>
+        <a href="book.html"
+          class="mobile-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-amber-500 hover:bg-gray-50">Book
+          a Repair</a>
+        <a href="track.html"
+          class="mobile-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-amber-500 hover:bg-gray-50">Track
+          Repair</a>
+        <a href="index.html#contact"
+          class="mobile-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-amber-500 hover:bg-gray-50">Contact</a>
+        <div class="pt-2 pb-1" id="mobileInstallBtn" style="display:none;">
+          <button onclick="triggerAppInstall(); document.getElementById('mobileMenu').classList.add('hidden');"
+            class="w-full text-center px-3 py-2 rounded-md text-base font-bold shadow-md"
+            style="background:#F59E0B;color:#fff;border:none;">Install App</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CUSTOMER VIEW WRAPPER -->
+  <!-- overflow-x-hidden here prevents horizontal scroll on mobile without breaking pull-to-refresh -->
+  <div id="customerView" class="overflow-x-hidden transition-fade">
+
+    <!-- HERO -->
+    <section id="hero" class="hero-bg min-h-[85vh] flex flex-col justify-center pt-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20 md:py-20 w-full">
+        <div class="max-w-4xl mx-auto text-center">
+          <!-- Mobile CTA buttons -->
+          <div class="md:hidden flex flex-col gap-3 mb-8">
+            <a href="book.html"
+              class="w-full text-center bg-white text-[#F38E00] border-2 border-[#F38E00] font-bold py-3 px-4 rounded-xl shadow-md transition-transform active:scale-95">Book
+              a Repair</a>
+            <div class="flex flex-row gap-3">
+              <a href="estimate.html"
+                class="flex-1 text-center bg-[#64A8D9] text-white border-2 border-white font-bold py-2 px-2 text-sm rounded-xl shadow-md transition-transform active:scale-95">Estimator</a>
+              <a href="track.html"
+                class="flex-1 text-center bg-white text-[#204285] border-2 border-[#204285] font-bold py-2 px-2 text-sm rounded-xl shadow-md transition-transform active:scale-95">Track
+                Repair</a>
+            </div>
+          </div>
+
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-none mb-6 tracking-tight">
+            <span style="color:#204285">Component-Level</span><br />
+            <span style="color:#F38E00">Smartphone Surgery</span><br />
+            <span style="color:#204285">&amp; Garage Repairs.</span>
+          </h1>
+          <p class="text-gray-600 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+            Expert micro-soldering, motherboard diagnostics, and precision part replacement for every brand. When
+            authorized service centers say <em style="color:#F59E0B;">no</em>, we say <strong
+              class="text-gray-900">bring
+              it in.</strong>
+          </p>
+
+          <!-- Brand Images with shadow/glow effect -->
+          <div class="flex items-center mt-12 pt-6 flex-wrap w-full justify-center">
+            <div class="flex flex-wrap items-center gap-6 sm:gap-10 w-full justify-center">
+              <div
+                class="hover:scale-110 transition-all duration-300 h-12 sm:h-16 flex items-center justify-center drop-shadow-md">
+                <img src="images/apple.png" alt="Apple"
+                  class="h-full object-contain filter drop-shadow-lg brightness-110 transition-all duration-300"
+                  style="transform: scale(1.1);">
+              </div>
+              <div
+                class="hover:scale-110 transition-all duration-300 h-12 sm:h-16 flex items-center justify-center drop-shadow-md">
+                <img src="images/samsung.png" alt="Samsung"
+                  class="h-full object-contain filter drop-shadow-lg brightness-110 transition-all duration-300"
+                  style="transform: scale(1.6);">
+              </div>
+              <div
+                class="hover:scale-110 transition-all duration-300 h-12 sm:h-16 flex items-center justify-center drop-shadow-md">
+                <img src="images/pixel.png" alt="Pixel"
+                  class="h-full object-contain filter drop-shadow-lg brightness-110 transition-all duration-300"
+                  style="transform: scale(0.9);">
+              </div>
+              <div
+                class="hover:scale-110 transition-all duration-300 h-12 sm:h-16 flex items-center justify-center drop-shadow-md">
+                <img src="images/xiomi.png" alt="Xiaomi"
+                  class="h-full object-contain filter drop-shadow-lg brightness-110 transition-all duration-300"
+                  style="transform: scale(1.6);">
+              </div>
+              <div
+                class="hover:scale-110 transition-all duration-300 h-12 sm:h-16 flex items-center justify-center drop-shadow-md">
+                <img src="images/Oppo.png" alt="OPPO"
+                  class="h-full object-contain filter drop-shadow-lg brightness-110 transition-all duration-300"
+                  style="transform: scale(0.9);">
+              </div>
+              <div
+                class="hover:scale-110 transition-all duration-300 h-12 sm:h-16 flex items-center justify-center drop-shadow-md">
+                <img src="images/huawei.png" alt="Huawei"
+                  class="h-full object-contain filter drop-shadow-lg brightness-110 transition-all duration-300"
+                  style="transform: scale(1.1);">
+              </div>
+              <div
+                class="hover:scale-110 transition-all duration-300 h-12 sm:h-16 flex items-center justify-center drop-shadow-md">
+                <img src="images/motorola.png" alt="Motorola"
+                  class="h-full object-contain filter drop-shadow-lg brightness-110 transition-all duration-300"
+                  style="transform: scale(1.3);">
+              </div>
+              <div
+                class="flex items-center justify-center hover:scale-110 transition-all duration-300 text-gray-800 font-black h-12 sm:h-16 text-xl sm:text-2xl ml-2 cursor-default drop-shadow-md brightness-110">
+                Others
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-center pb-8" style="animation:bounce 2s infinite;">
+        <i data-lucide="chevrons-down" class="w-6 h-6 text-gray-600"></i>
+      </div>
+    </section>
+
+    <!-- TRUST CARDS -->
+    <section class="relative z-10 -mt-16 pb-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="glass rounded-2xl p-6 flex items-start gap-4 h-full">
+            <div class="w-12 h-12 grad-amber rounded-xl flex items-center justify-center flex-shrink-0"><i
+                data-lucide="zap" class="w-6 h-6" style="color:#111827;"></i></div>
+            <div>
+              <h3 class="font-bold text-gray-900 text-base mb-1.5">60-90 Min Turnaround</h3>
+              <p class="text-gray-600 text-sm leading-relaxed">Most of the repairs are done when you just wander around
+                and do shopping of your household chores.</p>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-6 flex items-start gap-4 h-full">
+            <div class="w-12 h-12 grad-cyan rounded-xl flex items-center justify-center flex-shrink-0"><i
+                data-lucide="shield-check" class="w-6 h-6" style="color:#111827;"></i></div>
+            <div>
+              <h3 class="font-bold text-gray-900 text-base mb-1.5">90-Day Warranty</h3>
+              <p class="text-gray-600 text-sm leading-relaxed">Every single repair is fully backed by our comprehensive
+                90-day parts and labor warranty.</p>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-6 flex items-start gap-4 h-full">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+              style="background:linear-gradient(135deg,#10B981,#059669)"><i data-lucide="badge-check"
+                class="w-6 h-6 text-white"></i></div>
+            <div>
+              <h3 class="font-bold text-gray-900 text-base mb-1.5">No-Fix No-Fee</h3>
+              <p class="text-gray-600 text-sm leading-relaxed">Risk-free diagnostics. If your device is truly
+                unrepairable, you won't pay a single cent for it.</p>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-6 flex items-start gap-4 h-full">
+            <div class="w-12 h-12 grad-amber rounded-xl flex items-center justify-center flex-shrink-0"><i
+                data-lucide="cpu" class="w-6 h-6" style="color:#111827;"></i></div>
+            <div>
+              <h3 class="font-bold text-gray-900 text-base mb-1.5">All Brands &amp; Boards</h3>
+              <p class="text-gray-600 text-sm leading-relaxed">Expert component-level logic board repairs covering all
+                major smartphone and tablet makes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS BAND -->
+    <section class="py-10 border-y"
+      style="border-color:#E5E7EB;background:linear-gradient(90deg,#F9FAFB,#FFFFFF,#F9FAFB);">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          <div>
+            <div class="text-3xl font-black mb-1" style="color:#F59E0B;">4,800+</div>
+            <div class="text-gray-600 text-sm">Devices Repaired</div>
+          </div>
+          <div>
+            <div class="text-3xl font-black mb-1" style="color:#06B6D4;">98.6%</div>
+            <div class="text-gray-600 text-sm">Success Rate</div>
+          </div>
+          <div>
+            <div class="text-3xl font-black mb-1" style="color:#10B981;">75 Mins</div>
+            <div class="text-gray-600 text-sm">Avg. Turnaround</div>
+          </div>
+          <div>
+            <div class="text-3xl font-black mb-1" style="color:#F59E0B;">7 Yrs</div>
+            <div class="text-gray-600 text-sm">In Business</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+    <!-- ABOUT -->
+    <section id="about" class="py-12" style="background:linear-gradient(180deg,#F9FAFB,#FFFFFF);">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <div class="text-sm font-mono font-semibold tracking-widest mb-3 uppercase" style="color:#06B6D4;">Who We
+              Are</div>
+            <h2 class="text-3xl sm:text-4xl font-black section-title mb-6">About AG Mobile Service</h2>
+            <p class="text-gray-600 leading-relaxed mb-4">We are an independent master-technician garage specializing in
+              component-level smartphone repair. When authorized service centers say no, we get to work on the board
+              itself.</p>
+            <p class="text-gray-600 leading-relaxed mb-4">Led by a highly professional technician operating at a
+              certified master level (and currently finalizing official industry certification), we bring an immense
+              depth of knowledge to complex mobile diagnostics. We don't just swap parts; we diagnose the exact root
+              cause of the fault.</p>
+            <p class="text-gray-600 leading-relaxed mb-4">While we have the technical capability to repair all mobile
+              brands, our core specialization lies in the intricate architecture of <strong>Apple iPhone</strong> and
+              <strong>Samsung Galaxy</strong> devices.
+            </p>
+            <p class="text-gray-600 leading-relaxed mb-8">Every device is meticulously diagnosed on the bench, every
+              repair is fully documented, and every customer receives a completely transparent quote before we ever
+              touch a screw.</p>
+            <a href="book.html"
+              class="btn-amber px-8 py-3.5 rounded-xl text-base inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all"><i
+                data-lucide="calendar-check" class="w-5 h-5"></i> Book a Repair</a>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="glass rounded-2xl p-6">
+              <div class="w-11 h-11 grad-amber rounded-xl flex items-center justify-center mb-3"><i data-lucide="award"
+                  class="w-5 h-5" style="color:#111827;"></i></div>
+              <h3 class="font-bold text-gray-900 mb-1">Master Technicians</h3>
+              <p class="text-gray-600 text-sm leading-relaxed">Years of hands-on micro-soldering and board-level
+                experience.</p>
+            </div>
+            <div class="glass rounded-2xl p-6">
+              <div class="w-11 h-11 grad-cyan rounded-xl flex items-center justify-center mb-3"><i data-lucide="gem"
+                  class="w-5 h-5" style="color:#111827;"></i></div>
+              <h3 class="font-bold text-gray-900 mb-1">Quality Parts</h3>
+              <p class="text-gray-600 text-sm leading-relaxed">OEM-grade components tested before they go into your
+                phone.</p>
+            </div>
+            <div class="glass rounded-2xl p-6">
+              <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-3"
+                style="background:linear-gradient(135deg,#10B981,#059669)"><i data-lucide="dollar-sign"
+                  class="w-5 h-5 text-white"></i></div>
+              <h3 class="font-bold text-gray-900 mb-1">Affordable Pricing</h3>
+              <p class="text-gray-600 text-sm leading-relaxed">Unbeatable market rates for premium repairs. We guarantee
+                the most affordable prices without ever compromising on quality.</p>
+            </div>
+            <div class="glass rounded-2xl p-6">
+              <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-3"
+                style="background:linear-gradient(135deg,#8B5CF6,#6D28D9)"><i data-lucide="shield-check"
+                  class="w-5 h-5 text-white"></i></div>
+              <h3 class="font-bold text-gray-900 mb-1">Warranty Backed</h3>
+              <p class="text-gray-600 text-sm leading-relaxed">Total peace of mind with our 90 days warranty. We stand
+                by our work with an absolute No-Fix, No-Fee guarantee.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="services" class="py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-14">
+          <div class="text-sm font-mono font-semibold tracking-widest mb-3 uppercase" style="color:#F59E0B;">What We Do
+            Best</div>
+          <h2 class="text-3xl sm:text-4xl font-black section-title">Our Services</h2>
+          <p class="text-gray-600 mt-3 max-w-2xl mx-auto">Component-level expertise for every part of your devices.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <a href="book.html" class="glass rounded-2xl p-6 block transition-all duration-300 hover:-translate-y-1"
+            style="border-color:#E5E7EB;">
+            <div class="w-12 h-12 grad-amber rounded-xl flex items-center justify-center mb-4"><i
+                data-lucide="smartphone" class="w-6 h-6" style="color:#111827;"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Mobile Repair</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">Comprehensive smartphone repair including screen
+              replacement, battery upgrades, micro-soldering, and water damage recovery for all major brands.</p>
+          </a>
+          <a href="book.html" class="glass rounded-2xl p-6 block transition-all duration-300 hover:-translate-y-1"
+            style="border-color:#E5E7EB;">
+            <div class="w-12 h-12 grad-cyan rounded-xl flex items-center justify-center mb-4"><i data-lucide="tablet"
+                class="w-6 h-6" style="color:#111827;"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Tablet Repair</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">Expert tablet services covering cracked screens,
+              charging port replacements, battery issues, and motherboard diagnostics.</p>
+          </a>
+          <a href="book.html" class="glass rounded-2xl p-6 block transition-all duration-300 hover:-translate-y-1"
+            style="border-color:#E5E7EB;">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+              style="background:linear-gradient(135deg,#10B981,#059669)"><i data-lucide="laptop"
+                class="w-6 h-6 text-white"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Laptop Repair</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">Professional laptop repair including keyboard
+              replacements, battery swaps, hardware upgrades, and complete board-level troubleshooting.</p>
+          </a>
+          <a href="book.html" class="glass rounded-2xl p-6 block transition-all duration-300 hover:-translate-y-1"
+            style="border-color:#E5E7EB;">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+              style="background:linear-gradient(135deg,#8B5CF6,#6D28D9)"><i data-lucide="hard-drive"
+                class="w-6 h-6 text-white"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Data Recovery</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">Advanced data extraction from damaged, dead, or
+              water-logged devices to securely recover your precious photos, contacts, and files.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPECIALTIES -->
+    <section id="specialties" class="py-12" style="background:linear-gradient(180deg,#FFFFFF,#F9FAFB);">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-14">
+          <div class="text-sm font-mono font-semibold tracking-widest mb-3 uppercase" style="color:#06B6D4;">Deep Dive
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-black section-title">Our Repair Specialties</h2>
+          <p class="text-gray-600 mt-3 max-w-2xl mx-auto">Expertise that goes beyond the basics.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <a href="book.html" class="glass rounded-2xl p-6 block transition-all duration-300 hover:-translate-y-1"
+            style="border-color:#E5E7EB;">
+            <div class="w-12 h-12 grad-amber rounded-xl flex items-center justify-center mb-4"><i data-lucide="cpu"
+                class="w-6 h-6" style="color:#111827;"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Micro-Soldering &amp; IC Repair</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">BGA reball, PMIC fixes, charging IC replacement, and
+              component-level board diagnostics using professional soldering stations.</p>
+          </a>
+          <a href="book.html" class="glass rounded-2xl p-6 block transition-all duration-300 hover:-translate-y-1"
+            style="border-color:#E5E7EB;">
+            <div class="w-12 h-12 grad-cyan rounded-xl flex items-center justify-center mb-4"><i
+                data-lucide="monitor-smartphone" class="w-6 h-6" style="color:#111827;"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Screen Replacement</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">OEM-grade OLED and LCD panel swaps with True Tone
+              preservation, Face ID calibration, and Samsung AMOLED fingerprint alignment.</p>
+          </a>
+          <a href="book.html" class="glass rounded-2xl p-6 block transition-all duration-300 hover:-translate-y-1"
+            style="border-color:#E5E7EB;">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+              style="background:linear-gradient(135deg,#10B981,#059669)"><i data-lucide="battery-charging"
+                class="w-6 h-6 text-white"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Battery &amp; Power Systems</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">OEM and high-capacity cell replacements with BMS
+              calibration. Charging port, flex cable, USB-C/Lightning micro-soldering.</p>
+          </a>
+          <a href="book.html" class="glass rounded-2xl p-6 block transition-all duration-300 hover:-translate-y-1"
+            style="border-color:#E5E7EB;">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+              style="background:linear-gradient(135deg,#8B5CF6,#6D28D9)"><i data-lucide="wrench"
+                class="w-6 h-6 text-white"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Housing &amp; Frame Replacement</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">Back glass laser removal, aluminum frame
+              straightening, camera lens replacement, and IP-grade sealing restoration.</p>
+          </a>
+          <a href="book.html" class="glass rounded-2xl p-6 block transition-all duration-300 hover:-translate-y-1"
+            style="border-color:#E5E7EB;">
+            <div class="w-12 h-12 grad-amber rounded-xl flex items-center justify-center mb-4"><i data-lucide="droplets"
+                class="w-6 h-6" style="color:#111827;"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Water Damage Recovery</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">Ultrasonic PCB cleaning, liquid corrosion treatment,
+              component-level drying, and full functional restoration after submersion.</p>
+          </a>
+          <a href="book.html" class="glass rounded-2xl p-6 block transition-all duration-300 hover:-translate-y-1"
+            style="border-color:#E5E7EB;">
+            <div class="w-12 h-12 grad-cyan rounded-xl flex items-center justify-center mb-4"><i data-lucide="activity"
+                class="w-6 h-6" style="color:#111827;"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Advanced Diagnostics</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">Professional 3UTOOLS / DCSD diagnostic tools. Full
+              health reports, bootloop recovery, and firmware restoration services.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTANT ESTIMATOR -->
+
+    <!-- QUALITY ASSURANCE -->
+    <section class="py-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <div class="text-sm font-mono font-semibold tracking-widest mb-3 uppercase" style="color:#F59E0B;">Our
+              Promise</div>
+            <h2 class="text-3xl sm:text-4xl font-black section-title mb-6">Quality You Can Trust</h2>
+            <div class="space-y-4">
+              <div class="qa-card glass rounded-xl p-4 flex items-start gap-4"><i data-lucide="shield-check"
+                  class="w-8 h-8 flex-shrink-0 mt-0.5" style="color:#F59E0B;"></i>
+                <div>
+                  <h4 class="font-bold text-gray-900 mb-1">90-Day Repair Warranty</h4>
+                  <p class="text-gray-600 text-sm">Every repair carries a 90-day parts and labor warranty. If it fails,
+                    we fix it for free.</p>
+                </div>
+              </div>
+              <div class="qa-card glass rounded-xl p-4 flex items-start gap-4"><i data-lucide="badge-check"
+                  class="w-8 h-8 flex-shrink-0 mt-0.5" style="color:#06B6D4;"></i>
+                <div>
+                  <h4 class="font-bold text-gray-900 mb-1">OEM-Grade Components</h4>
+                  <p class="text-gray-600 text-sm">We only use manufacturer-spec or certified aftermarket parts &mdash;
+                    never
+                    cheap counterfeits.</p>
+                </div>
+              </div>
+              <div class="qa-card glass rounded-xl p-4 flex items-start gap-4"><i data-lucide="dollar-sign"
+                  class="w-8 h-8 flex-shrink-0 mt-0.5" style="color:#10B981;"></i>
+                <div>
+                  <h4 class="font-bold text-gray-900 mb-1">Affordable Pricing</h4>
+                  <p class="text-gray-600 text-sm">Unbeatable market rates for premium repairs. We guarantee the most
+                    affordable prices without ever compromising on quality.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="relative">
+            <div class="rounded-2xl overflow-hidden" style="height:380px;">
+              <picture>
+                <source srcset="images/repair-station.webp" type="image/webp">
+                <img src="images/repair-station.png"
+                  alt="Quality Assurance" style="width:100%;height:100%;object-fit:cover;filter:brightness(0.9);" />
+              </picture>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- END CUSTOMER VIEW -->
+
+  <!-- FOOTER -->
+  <footer id="contact" class="border-t py-10" style="border-color: rgba(229,231,235,1);background:#F9FAFB;">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
+        <div>
+          <div class="flex items-center gap-1 mb-4"><img src="images/AGlogo.webp" alt="AG logo"
+              style="height:48px;width:auto;object-fit:contain;" /><img src="images/AGlogotype.webp" alt="AG"
+              style="height:48px;width:auto;object-fit:contain;margin-left:-4px;position:relative;top:6px;" /></div>
+          <p class="text-gray-600 text-sm leading-relaxed">Independent master technician garage specializing in
+            component-level repairs for all smartphone brands.</p>
+        </div>
+        <div>
+          <h4 class="font-bold text-gray-900 mb-4 text-sm">Quick Links</h4>
+          <div class="space-y-2">
+            <a href="book.html" class="block text-gray-600 text-sm hover:text-amber-400 transition-colors">Book a
+              Repair</a>
+            <a href="estimate.html" class="block text-gray-600 text-sm hover:text-amber-400 transition-colors">Instant
+              Estimator</a>
+            <a href="track.html" class="block text-gray-600 text-sm hover:text-amber-400 transition-colors">Track Your
+              Ticket</a>
+            <a href="index.html#specialties"
+              class="block text-gray-600 text-sm hover:text-amber-400 transition-colors">Our
+              Specialties</a>
+          </div>
+        </div>
+        <div>
+          <h4 class="font-bold text-gray-900 mb-4 text-sm">Contact the Garage</h4>
+          <div class="space-y-2 text-sm text-gray-600">
+            <div class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"
+                style="color:#F59E0B;flex-shrink:0;"></i>123 Tech Workshop Lane, Suite A</div>
+            <div class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"
+                style="color:#06B6D4;flex-shrink:0;"></i>+61 450 816 230</div>
+            <div class="flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4"
+                style="color:#10B981;flex-shrink:0;"></i>agmobiles.au@gmail.com</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="border-t pt-6 flex flex-col md:flex-row items-center justify-between gap-4 w-full"
+      style="border-color:rgba(55,65,81,0.4);">
+      <div class="flex items-center gap-4 flex-1 justify-center md:justify-start">
+        <p class="text-gray-600 text-xs">&copy; 2026 AG Mobile Service. All rights reserved.</p>
+        <a href="console.html" class="text-gray-400 hover:text-amber-500 text-xs transition-colors">Operator Login</a>
+      </div>
+      <div class="flex-1 text-center">
+        <p class="text-gray-500 text-xs font-medium tracking-wide">Powered by <span
+            class="font-bold text-gray-800">nobr<span class="text-teal-500">ai</span>nr</span></p>
+      </div>
+      <div class="flex-1 text-center md:text-right">
+        <p class="text-gray-700 text-xs ticket-font">GARAGE TECH LAB // COMPONENT-LEVEL EXPERTISE</p>
+      </div>
+    </div>
+    </div>
+  </footer>
+
+  <!-- Scroll to Top Button -->
+  <a href="index.html#hero" id="scrollToTopBtn"
+    class="fixed bottom-6 right-6 z-50 bg-[#F38E00] text-white p-3 rounded-full shadow-xl transition-all duration-300 opacity-0 pointer-events-none hover:-translate-y-1 active:scale-95">
+    <i data-lucide="arrow-up" class="w-6 h-6"></i>
+  </a>
+
+  <script src="app.js" defer></script>
+  <script src="pwa.js"></script>
+
+</body>
+
+</html>

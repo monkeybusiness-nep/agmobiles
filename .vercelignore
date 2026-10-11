@@ -1,0 +1,4 @@
+# These files must not be publicly served
+firestore.rules
+tailwind.config.js
+input.css
