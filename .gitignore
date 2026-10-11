@@ -70,3 +70,7 @@ node_modules/
 
 firebase.json
 firestore.indexes.json
+firestore.rules
+input.css
+tailwind.config.js
+.vscode/
